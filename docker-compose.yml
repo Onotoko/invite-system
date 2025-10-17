@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: invite-api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MONGODB_URL=mongodb://mongodb:27017/invite-system
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-secret-key-change-this
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - invite-network
+
+  mongodb:
+    image: mongo:5.0
+    container_name: invite-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=invite-system
+    restart: unless-stopped
+    networks:
+      - invite-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: invite-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    networks:
+      - invite-network
+
+volumes:
+  mongodb-data:
+  redis-data:
+
+networks:
+  invite-network:
+    driver: bridge
